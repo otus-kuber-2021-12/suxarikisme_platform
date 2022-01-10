@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: frontend
+  name: frontend
+spec:
+  containers:
+  - image: ttl.sh/frontend-demo-otus:5h
+    name: frontend
+    resources: {}
+    env:
+    - name: PRODUCT_CATALOG_SERVICE_ADDR
+      value: "placeholder"
+    - name: CURRENCY_SERVICE_ADDR
+      value: "placeholder"
+    - name: CART_SERVICE_ADDR
+      value: "placeholder"
+    - name: RECOMMENDATION_SERVICE_ADDR
+      value: "placeholder"
+    - name: CHECKOUT_SERVICE_ADDR
+      value: "placeholder"
+    - name: SHIPPING_SERVICE_ADDR
+      value: "placeholder"
+    - name: AD_SERVICE_ADDR
+      value: "placeholder"
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never
+status: {}
