@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        tier: frontend
+    spec:
+      containers:
+      - name: server
+        image: ttl.sh/frontend-demo-otus:5h
+        readinessProbe:
+            initialDelaySeconds: 5
+            httpGet:
+              path: "/_healthz"
+              port: 8080
+              httpHeaders:
+              - name: "Cookie"
+                value: "X-Session-ID=x-readiness-probe"
+        env:
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: "placeholder"
+        - name: CURRENCY_SERVICE_ADDR
+          value: "placeholder"
+        - name: CART_SERVICE_ADDR
+          value: "placeholder"
+        - name: RECOMMENDATION_SERVICE_ADDR
+          value: "placeholder"
+        - name: CHECKOUT_SERVICE_ADDR
+          value: "placeholder"
+        - name: SHIPPING_SERVICE_ADDR
+          value: "placeholder"
+        - name: AD_SERVICE_ADDR
+          value: "placeholder"
