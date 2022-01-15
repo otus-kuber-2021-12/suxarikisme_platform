@@ -8,11 +8,11 @@ spec:
   replicas: 3
   selector:
     matchLabels:
-      tier: paymentservice
+      app: paymentservice
   template:
     metadata:
       labels:
-        tier: paymentservice
+        app: paymentservice
     spec:
       containers:
       - name: paymentsrv
