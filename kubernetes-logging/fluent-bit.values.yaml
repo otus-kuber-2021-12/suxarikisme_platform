@@ -1,0 +1,60 @@
+backend:
+  type: es
+  es:
+    host: elasticsearch-master
+tolerations:
+  - operator: "Exists"
+
+input:
+  tail:
+    parsers: ingress-nginx
+
+parsers:
+  enabled: true
+
+  json:
+  - name: ingress-nginx
+    extraEntries: |
+        Match   *
+        Time_Format %d/%b/%Y:%H:%M:%S %z
+        Time_Keep   On
+        Remove  time
+        Rename  @timestamp timestamp
+        Rename  time_local timestamp
+
+
+rawConfig: |
+  @INCLUDE fluent-bit-service.conf
+  @INCLUDE fluent-bit-input.conf
+  @INCLUDE fluent-bit-filter.conf
+  @INCLUDE fluent-bit-output.conf
+
+  [FILTER]
+      Name modify
+      Match *
+      Remove time
+      Remove @timestamp
+
+  [OUTPUT]
+      Name es
+      Match kube.*
+      Host elasticsearch-master
+      Logstash_Format On
+      Retry_Limit False
+      Time_Key  es_time
+      Retry_Limit  False
+      Generate_ID  On
+      Buffer_Size False
+      Trace_Error On
+  [OUTPUT]
+      Name es
+      Match host.*
+      Host elasticsearch-master
+      Logstash_Format On
+      Logstash_Prefix node
+      Retry_Limit False
+      Time_Key  es_time
+      Retry_Limit  False
+      Generate_ID  On
+      Buffer_Size False
+      Trace_Error On
