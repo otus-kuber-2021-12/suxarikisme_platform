@@ -1,0 +1,11 @@
+*****
+
+  @INCLUDE input-systemd.conf
+
+*****
+
+  input-systemd.conf: |
+    [INPUT]
+      Name            systemd
+      Path            /journal
+      Tag             systemd.*  
