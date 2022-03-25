@@ -1,0 +1,37 @@
+stages:
+  - gcloud
+  - build
+
+.common:
+  except: 
+    refs:
+      - flux-sync
+
+.docker-template:
+  image:
+    name: docker:stable
+  services:
+    - docker:dind
+
+gcloud:
+  extends: .common
+  stage: gcloud
+  image: google/cloud-sdk
+  allow_failure: true
+  script:
+    - base64 -d ${CI_PROJECT_DIR}/encoded_serviceaccount.json > ${CI_PROJECT_DIR}/encoded_serviceaccount2.json
+    - gcloud auth activate-service-account --key-file ${CI_PROJECT_DIR}/encoded_serviceaccount2.json
+    - gcloud config set compute/zone us-central1-a
+    - gcloud container clusters create demo --enable-autoupgrade --enable-autoscaling --min-nodes=3 --max-nodes=10 --num-nodes=5 --project=turnkey-banner-339407
+
+build:
+  extends: .docker-template
+  stage: build
+  allow_failure: true
+  script:
+    - cd src/$SRVPATH
+    - docker build . -f Dockerfile -t ttl.sh/otus-gitops-$SERVICE:49h
+    - docker push ttl.sh/otus-gitops-$SERVICE:49h
+
+include:
+  - '/pipeline/build.yml'
