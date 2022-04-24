@@ -1,0 +1,101 @@
+global:
+   tlsDisable: true
+injector:
+  enabled: true
+  image:
+    repository: "hashicorp/vault-k8s"
+#    tag: "0.1.2"
+    pullPolicy: IfNotPresent
+  agentImage:
+    repository: "vault"
+#    tag: "1.3.1"
+  namespaceSelector: {}
+  certs:
+    secretName: null
+    caBundle: ""
+    certName: tls.crt
+    keyName: tls.key
+  resources: {}
+server:
+  image:
+    repository: "vault"
+#    tag: 1.2.4
+    pullPolicy: IfNotPresent
+  resources:
+  ingress:
+    enabled: false
+    labels: 
+      traffic: external
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: vault
+        paths:
+        - path: /*
+          backend:
+            serviceName: vault
+            servicePort: 8200       
+    tls: 
+      - secretName: vault-certs
+        hosts:
+          - vault
+  authDelegator:
+    enabled: true
+  extraContainers: null
+  readinessProbe:
+    enabled: true
+  livenessProbe:
+    enabled: false
+    path: /v1/sys/health?standbyok
+  extraEnvironmentVars:
+    VAULT_ADDR: https://vault:8200
+    VAULT_CACERT: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+  extraVolumes:
+    - type: secret
+      name: vault-certs
+      path: null # /vault/userconfig
+    - type: secret
+      name: gcp-kms
+      path: /usr/vault
+  standalone:
+    enabled: "-"
+    config: |
+      ui = true
+      listener "tcp" {
+        tls_disable = 1
+        address = "[::]:8200"
+        cluster_address = "[::]:8201"
+      }
+      storage "file" {
+        path = "/vault/data"
+      }
+  ha:
+    enabled: true
+    replicas: 3
+    config: |
+      ui = true
+      listener "tcp" {
+        #tls_disable = 1
+        tls_disable = 0
+        address = "[::]:8200"
+        cluster_address = "[::]:8201"
+        tls_cert_file = "/vault/userconfig/vault-certs/tls.crt"
+        tls_key_file  = "/vault/userconfig/vault-certs/tls.key"      
+      }
+      storage "consul" {
+        path = "vault"
+        address = "HOST_IP:8500"
+       }
+      seal "gcpckms" {
+      credentials = "/usr/vault/gcp-kms/vault-seal"
+      project     = "turnkey-banner-339407"
+      region      = "global"
+      key_ring    = "vault-ring"
+      crypto_key  = "vault-key"
+      }
+
+
+ui:
+  enabled: true
+  serviceType: "LoadBalancer"
